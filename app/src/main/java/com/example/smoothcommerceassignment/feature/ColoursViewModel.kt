@@ -1,4 +1,4 @@
-package com.example.smoothcommerceassignment
+package com.example.smoothcommerceassignment.feature
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
@@ -11,20 +11,19 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+
 @HiltViewModel
-class ColoursViewModel @Inject constructor(api: ColoursApi) : ViewModel() {
+class ColoursViewModel @Inject constructor(private val api: ColoursApi) : ViewModel() {
 
     private val coloursLiveData = MutableLiveData<List<Colour>>()
 
-    init {
-
+    fun handleSearchClick(searchKey: String) {
         viewModelScope.launch {
-            val colours = api.getColours()
+            val colours = api.getColours(searchKey)
             delay(2000)
             coloursLiveData.value = colours
         }
     }
 
     fun getColours(): LiveData<List<Colour>> = coloursLiveData
-
 }

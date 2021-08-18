@@ -1,14 +1,14 @@
-package com.example.smoothcommerceassignment
+package com.example.smoothcommerceassignment.feature
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.example.smoothcommerceassignment.R
 import com.example.smoothcommerceassignment.data.Colour
 import com.example.smoothcommerceassignment.databinding.GridColorItemBinding
 
-class ColoursAdapter : RecyclerView.Adapter<ColoursAdapter.ColourViewHolder>() {
+class ColoursAdapter (val adapterOnClick : (String) -> Unit) : RecyclerView.Adapter<ColoursAdapter.ColourViewHolder>() {
 
     private var coloursList = emptyList<Colour>()
 
@@ -34,18 +34,25 @@ class ColoursAdapter : RecyclerView.Adapter<ColoursAdapter.ColourViewHolder>() {
         notifyDataSetChanged()
     }
 
-    class ColourViewHolder(private val binding: GridColorItemBinding) :
+    inner class ColourViewHolder(private val binding: GridColorItemBinding) :
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(colour: Colour) {
             binding.apply {
-                //colourView.setBackgroundColor()
-                tvTitle.text = colour.title
-                tvHex.text = colour.hex
+                tvTitle.text = "Title : ${colour.title}"
+                tvHex.text = "Hex : ${colour.hex}"
 
                 Glide.with(itemView)
                     .load(colour.imageUrl)
                     .into(imageView)
+
+                imageLike.setOnClickListener {
+                    imageLike.setImageResource(R.drawable.ic_heart)
+                }
+
+                itemView.setOnClickListener {
+                    adapterOnClick(colour.imageUrl)
+                }
             }
         }
     }
