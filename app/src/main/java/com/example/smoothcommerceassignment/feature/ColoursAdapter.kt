@@ -2,15 +2,31 @@ package com.example.smoothcommerceassignment.feature
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.recyclerview.widget.AsyncListDiffer
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.smoothcommerceassignment.R
 import com.example.smoothcommerceassignment.data.Colour
 import com.example.smoothcommerceassignment.databinding.GridColorItemBinding
 
-class ColoursAdapter (val adapterOnClick : (String) -> Unit) : RecyclerView.Adapter<ColoursAdapter.ColourViewHolder>() {
+class ColoursAdapter(
+    val adapterOnClick: (String) -> Unit,
+    val colourLikeClicked: (Colour) -> Unit
+) : RecyclerView.Adapter<ColoursAdapter.ColourViewHolder>() {
 
-    private var coloursList = emptyList<Colour>()
+    private val differCallback = object : DiffUtil.ItemCallback<Colour>() {
+        override fun areItemsTheSame(oldItem: Colour, newItem: Colour): Boolean {
+            return oldItem.hex == newItem.hex // if two objects represent the same item
+        }
+
+        // called only if areItemsTheSame(..,..) returns true, to see if object is same, have the contents changed?
+        override fun areContentsTheSame(oldItem: Colour, newItem: Colour): Boolean {
+            return oldItem == newItem
+        }
+    }
+
+    private val differ = AsyncListDiffer(this, differCallback)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ColourViewHolder {
         val binding =
@@ -19,19 +35,18 @@ class ColoursAdapter (val adapterOnClick : (String) -> Unit) : RecyclerView.Adap
     }
 
     override fun onBindViewHolder(holder: ColourViewHolder, position: Int) {
-        if (coloursList.isEmpty())
+        if (differ.currentList.isEmpty())
             return
 
-        holder.bind(coloursList[position])
+        holder.bind(differ.currentList[position])
     }
 
     override fun getItemCount(): Int {
-        return coloursList.size
+        return differ.currentList.size
     }
 
-    fun updateColoursList(updatedList: List<Colour>) {
-        coloursList = updatedList
-        notifyDataSetChanged()
+    fun updateColoursList(updatedList: MutableList<Colour>) {
+        differ.submitList(updatedList)
     }
 
     inner class ColourViewHolder(private val binding: GridColorItemBinding) :
@@ -41,13 +56,18 @@ class ColoursAdapter (val adapterOnClick : (String) -> Unit) : RecyclerView.Adap
             binding.apply {
                 tvTitle.text = "Title : ${colour.title}"
                 tvHex.text = "Hex : ${colour.hex}"
+                imageLike.setImageResource(if (colour.isFavourite) R.drawable.ic_heart else R.drawable.ic_heart_outlined)
 
                 Glide.with(itemView)
                     .load(colour.imageUrl)
                     .into(imageView)
 
                 imageLike.setOnClickListener {
-                    imageLike.setImageResource(R.drawable.ic_heart)
+                    val selectedColour = differ.currentList[adapterPosition]
+                    selectedColour.isFavourite =
+                        differ.currentList[adapterPosition].isFavourite.not()
+                    colourLikeClicked(selectedColour)
+                    imageLike.setImageResource(if (selectedColour.isFavourite) R.drawable.ic_heart else R.drawable.ic_heart_outlined)
                 }
 
                 itemView.setOnClickListener {

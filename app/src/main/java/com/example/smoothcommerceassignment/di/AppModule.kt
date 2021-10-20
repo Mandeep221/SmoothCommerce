@@ -1,6 +1,9 @@
 package com.example.smoothcommerceassignment.di
 
+import android.app.Application
+import androidx.room.Room
 import com.example.smoothcommerceassignment.api.ColoursApi
+import com.example.smoothcommerceassignment.data.ColoursDatabase
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -34,5 +37,15 @@ class AppModule {
     @Provides
     fun providesColoursApi(retrofit: Retrofit): ColoursApi {
         return retrofit.create(ColoursApi::class.java)
+    }
+
+    @Singleton
+    @Provides
+    fun providesRoomDb(app: Application): ColoursDatabase {
+        return Room.databaseBuilder(
+            app.applicationContext,
+            ColoursDatabase::class.java,
+            "colours_db.db"
+        ).build()
     }
 }

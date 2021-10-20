@@ -9,9 +9,13 @@ import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.viewModels
+import androidx.core.view.isInvisible
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.smoothcommerceassignment.data.Colour
 import com.example.smoothcommerceassignment.databinding.ActivityMainBinding
+import com.example.smoothcommerceassignment.util.Resource
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -57,9 +61,14 @@ class ColoursActivity : AppCompatActivity() {
 
     private fun configureRecyclerView() {
 
-        val coloursAdapter = ColoursAdapter { imgUrl ->
-            colourItemClicked(imgUrl)
-        }
+        val coloursAdapter = ColoursAdapter(
+            adapterOnClick = { imgUrl ->
+                colourItemClicked(imgUrl)
+            },
+            colourLikeClicked = { colour ->
+                onLikeButtonClicked(colour)
+            }
+        )
 
         val gridLayoutManager = GridLayoutManager(
             this@ColoursActivity,
@@ -73,14 +82,20 @@ class ColoursActivity : AppCompatActivity() {
                 setHasFixedSize(true)
                 adapter = coloursAdapter
             }
-            viewModel.getColours().observe(this@ColoursActivity) { coloursList ->
-                coloursAdapter.updateColoursList(coloursList)
-                binding.apply {
-                    progressView.visibility = View.GONE
-                    recyclerView.visibility = View.VISIBLE
+
+            viewModel.getUiState().observe(this@ColoursActivity) { resource ->
+                resource?.data?.let {
+                    coloursAdapter.updateColoursList(it.toMutableList())
                 }
+                progressView.isVisible =
+                    resource is Resource.Loading
+                recyclerView.isInvisible = resource is Resource.Loading
             }
         }
+    }
+
+    private fun onLikeButtonClicked(colour: Colour) {
+        viewModel.handleColourLike(colour)
     }
 
     private fun colourItemClicked(imgUrl: String) {
